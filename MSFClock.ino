@@ -7,6 +7,11 @@
 #include <DS1307RTC.h>
 #include <MSFTime.h>
 #include <Wire.h>
+#include <LiquidCrystal.h>
+
+
+#define LCD_ADDR = 0x20;
+#define RTC_ADDR = 0x68;
 
 
 char* getRadioTime();
@@ -14,15 +19,16 @@ char* getRTCTime();
 bool  setRTCTime();
 char* convertToUnixEpoch(time_t t);
 
-int LCD_ADDR = 0x20;
-int RTC_ADDR = 0x68;
+LiquidCrystal lcd(0);
 
 void setup() {
-  // put your setup code here, to run once:
-  
+  lcd.begin(16, 2);
+  lcd.print("Hello World!");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  lcd.print(millis()/1000);
 }
