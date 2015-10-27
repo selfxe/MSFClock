@@ -23,7 +23,7 @@ char* getRadioTime();
 tmElements_t readRTC();
 bool  setRTC();
 
-char* convertToUnixEpoch(tmElements_t tm);
+time_t convertToUnixEpoch(tmElements_t tm);
 
 
 // Initialize LCD object with address.  
@@ -33,9 +33,8 @@ LiquidCrystal lcd(0);
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(38400);
   setupLCD();
-  delay(2000);
 }
 
 void loop() {
@@ -52,7 +51,9 @@ void loop() {
  ************************************************************/
 void setupLCD() {
   lcd.begin(16, 2);
-  lcd.print("Hello World!");
+  lcd.clear();
+  lcd.print("UNIX Epoch Time!");
+  delay(500);
 }
 
 
@@ -68,24 +69,25 @@ void secondsSinceRestart() {
 
 tmElements_t readRTC() {
   tmElements_t tm;
-  lcd.setCursor(0,0);
   
   if (RTC.read(tm)) {
-    lcd.print("Found RTC time!");
+//    lcd.setCursor(0,0);
+//    lcd.print("Found RTC time!");
     return tm;
   } else {
     if (RTC.chipPresent()) {
+      lcd.setCursor(0,0);
       lcd.print("I see the RTC.");
     } else {
+      lcd.setCursor(0,0);
       lcd.print("No RTC chip.");
     }
   } 
   return tm;
 }
 
-char* convertToUnixEpoch(tmElements_t tm) {
-  char timeString[16];
-  sprintf(timeString, "%02d:%02d:%02d", tm.Hour, tm.Minute, tm.Second);
-  Serial.println(timeString);
-  return timeString;
+time_t convertToUnixEpoch(tmElements_t tm) {
+  time_t t = makeTime(tm);
+  Serial.println(t);
+  return t;
 }
