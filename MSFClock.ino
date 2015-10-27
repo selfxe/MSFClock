@@ -14,6 +14,9 @@
 #define RTC_ADDR = 0x68;
 
 
+void setupLCD();
+void setupRTC();
+void helloWorld();
 char* getRadioTime();
 char* getRTCTime();
 bool  setRTCTime();
@@ -21,14 +24,25 @@ char* convertToUnixEpoch(time_t t);
 
 LiquidCrystal lcd(0);
 
+
 void setup() {
+  setupLCD();
+}
+
+void loop() {
+  helloWorld();
+}
+
+
+
+void setupLCD() {
   lcd.begin(16, 2);
   lcd.print("Hello World!");
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void helloWorld() {
   lcd.setCursor(0, 1);
   // print the number of seconds since reset:
   lcd.print(millis()/1000);
 }
+
