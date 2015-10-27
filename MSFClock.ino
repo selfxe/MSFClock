@@ -23,7 +23,7 @@ char* getRadioTime();
 tmElements_t readRTC();
 bool  setRTC();
 
-char* convertToUnixEpoch(time_t t);
+char* convertToUnixEpoch(tmElements_t tm);
 
 
 // Initialize LCD object with address.  
@@ -33,14 +33,16 @@ LiquidCrystal lcd(0);
 
 
 void setup() {
+  Serial.begin(9600);
   setupLCD();
   delay(2000);
 }
 
 void loop() {
-  secondsSinceRestart();
+//  secondsSinceRestart();
   tmElements_t tm = readRTC();
-
+  lcd.setCursor(0,1);
+  lcd.print(convertToUnixEpoch(tm));
   delay(1000);  
 }
 
@@ -81,3 +83,9 @@ tmElements_t readRTC() {
   return tm;
 }
 
+char* convertToUnixEpoch(tmElements_t tm) {
+  char timeString[16];
+  sprintf(timeString, "%02d:%02d:%02d", tm.Hour, tm.Minute, tm.Second);
+  Serial.println(timeString);
+  return timeString;
+}
