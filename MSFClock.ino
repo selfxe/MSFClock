@@ -7,36 +7,46 @@
 #include <Wire.h>
 #include <LiquidCrystal.h>
 
-
 #define LCD_ADDR  0x20;
 #define RTC_ADDR  0x68;
 #define RADIO_PIN 8;
 
 
-void setupLCD();
-void setRTC();
 
+/************************************************************
+ * FUNCTION HEADERS
+ ************************************************************/
+void setupLCD();
+//void setRTC();
 void secondsSinceRestart();
 void getRadioTime();
 time_t msfTimeSync();
-
 tmElements_t readRTC();
-
 time_t convertToUnixEpoch(tmElements_t tm);
+/************************************************************/
 
 
-// Initialize LCD object with address.  
-// On the LCD backpack, 0 means the default address with no jumpers set.
-// This equates to 0x20 for I2C bus connections, according to the documentation.
+
+/**
+ * Initializes LCD object with address.  
+ * On the LCD backpack, 0 means the default address with no jumpers set.
+ * This equates to 0x20 for I2C bus connections, according to the documentation.
+ */
 LiquidCrystal lcd(0);
 
-// Initialize the MSF radio circuit
+/**
+ * Initializes the MSF radio circuit.
+ * Initializes values for the MSF time, and the radio signal status.
+ */
 MSFTime msf;
 time_t prevDisplay = 0;
 byte prevStatus = 255;
 
 
 
+/************************************************************
+ * ARDUINO MAIN
+ ************************************************************/
 void setup() {
   // serial is for debugging, but the power-supply-over-USB is extremely noisy, so the radio will stop working.
   Serial.begin(38400);
@@ -55,6 +65,7 @@ void loop() {
   lcd.print(convertToUnixEpoch(tm));
   delay(1000);  
 }
+/************************************************************/
 
 
 
@@ -73,41 +84,6 @@ void setupLCD() {
 }
 
 
-
-/************************************************************
- * WORKERS
- ************************************************************/
-/**
- * Writes to the LCD the current system time of the Ardunio.
- */
-void secondsSinceRestart() {
-  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print(millis()/1000);
-}
-
-/**
- * Reads the time from the Real Time Clock hardware in a chunked data structure.
- */
-tmElements_t readRTC() {
-  tmElements_t tm;
-  
-  if (RTC.read(tm)) {
-//    lcd.setCursor(0,0);
-//    lcd.print("Found RTC time!");
-    return tm;
-  } else {
-    if (RTC.chipPresent()) {
-      lcd.setCursor(0,0);
-      lcd.print("I see the RTC.");
-    } else {
-      lcd.setCursor(0,0);
-      lcd.print("No RTC chip.");
-    }
-  } 
-  return tm;
-}
-
 /**
  * Figures the seconds since 1970 for the given time value.
  */
@@ -118,6 +94,43 @@ time_t convertToUnixEpoch(tmElements_t tm) {
 }
 
 
+/**
+ * Writes to Serial the current time stored in the time buffer.  
+ * NOTE:  When powered by USB, the radio will see a lot of noise, and will 
+ * not be able to find a good time signal.
+ */
+void digitalClockDisplay(){
+  // digital clock display of the time
+  Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(" ");
+  Serial.print(month());
+  Serial.print(" ");
+  Serial.print(year()); 
+  Serial.println(); 
+}
+
+
+/**
+ * Writes a numeric value with padding and separators.  Similar to an sprintf call.
+ */
+void printDigits(int digits){
+  // utility function for digital clock display: prints preceding colon and leading 0
+  Serial.print(":");
+  if(digits < 10)
+    Serial.print('0');
+  Serial.print(digits);
+}
+/************************************************************/
+
+
+
+/************************************************************
+ * WORKERS
+ ************************************************************/
 /**
  * Reads the MSF radio for a completed time signal.
  */
@@ -158,35 +171,6 @@ void getRadioTime() {
   }
 }
 
-/**
- * Writes a numeric value with padding and separators.  Similar to an sprintf call.
- */
-void printDigits(int digits){
-  // utility function for digital clock display: prints preceding colon and leading 0
-  Serial.print(":");
-  if(digits < 10)
-    Serial.print('0');
-  Serial.print(digits);
-}
-
-/**
- * Writes to Serial the current time stored in the time buffer.  
- * NOTE:  When powered by USB, the radio will see a lot of noise, and will 
- * not be able to find a good time signal.
- */
-void digitalClockDisplay(){
-  // digital clock display of the time
-  Serial.print(hour());
-  printDigits(minute());
-  printDigits(second());
-  Serial.print(" ");
-  Serial.print(day());
-  Serial.print(" ");
-  Serial.print(month());
-  Serial.print(" ");
-  Serial.print(year()); 
-  Serial.println(); 
-}
 
 /**
  * Declares the method to use as a time synchronization function for the 
@@ -195,4 +179,38 @@ void digitalClockDisplay(){
 time_t msfTimeSync() {
   return msf.getTime();
 }
+
+
+/**
+ * Reads the time from the Real Time Clock hardware in a chunked data structure.
+ */
+tmElements_t readRTC() {
+  tmElements_t tm;
+  
+  if (RTC.read(tm)) {
+//    lcd.setCursor(0,0);
+//    lcd.print("Found RTC time!");
+    return tm;
+  } else {
+    if (RTC.chipPresent()) {
+      lcd.setCursor(0,0);
+      lcd.print("I see the RTC.");
+    } else {
+      lcd.setCursor(0,0);
+      lcd.print("No RTC chip.");
+    }
+  } 
+  return tm;
+}
+
+
+/**
+ * Writes to the LCD the current system time of the Ardunio.
+ */
+void secondsSinceRestart() {
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  lcd.print(millis()/1000);
+}
+/************************************************************/
 
