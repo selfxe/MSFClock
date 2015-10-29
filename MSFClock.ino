@@ -1,11 +1,9 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include <Adafruit_MCP23017.h>
-#include <Adafruit_RGBLCDShield.h>
 
 #include <DS1307RTC.h>
 #include <Time.h>
-#include <MSFTime.h>
+#include "MSFTime.h"
 #include <Wire.h>
 #include <LiquidCrystal.h>
 
@@ -40,6 +38,7 @@ byte prevStatus = 255;
 
 
 void setup() {
+  // serial is for debugging, but the power-supply-over-USB is extremely noisy, so the radio will stop working.
   Serial.begin(38400);
   setupLCD();
 
@@ -62,6 +61,10 @@ void loop() {
 /************************************************************
  * HELPERS
  ************************************************************/
+/**
+ * Declares the size of the connected LCD hardware, 
+ * and prints an initial message to ensure proper connection.
+ */
 void setupLCD() {
   lcd.begin(16, 2);
   lcd.clear();
@@ -74,12 +77,18 @@ void setupLCD() {
 /************************************************************
  * WORKERS
  ************************************************************/
+/**
+ * Writes to the LCD the current system time of the Ardunio.
+ */
 void secondsSinceRestart() {
   lcd.setCursor(0, 1);
   // print the number of seconds since reset:
   lcd.print(millis()/1000);
 }
 
+/**
+ * Reads the time from the Real Time Clock hardware in a chunked data structure.
+ */
 tmElements_t readRTC() {
   tmElements_t tm;
   
@@ -99,6 +108,9 @@ tmElements_t readRTC() {
   return tm;
 }
 
+/**
+ * Figures the seconds since 1970 for the given time value.
+ */
 time_t convertToUnixEpoch(tmElements_t tm) {
   time_t t = makeTime(tm);
   Serial.println(t);
@@ -106,7 +118,9 @@ time_t convertToUnixEpoch(tmElements_t tm) {
 }
 
 
-
+/**
+ * Reads the MSF radio for a completed time signal.
+ */
 void getRadioTime() {
   byte currStatus = msf.getStatus();
   Serial.print("Radio Status:  ");
@@ -144,6 +158,9 @@ void getRadioTime() {
   }
 }
 
+/**
+ * Writes a numeric value with padding and separators.  Similar to an sprintf call.
+ */
 void printDigits(int digits){
   // utility function for digital clock display: prints preceding colon and leading 0
   Serial.print(":");
@@ -152,6 +169,11 @@ void printDigits(int digits){
   Serial.print(digits);
 }
 
+/**
+ * Writes to Serial the current time stored in the time buffer.  
+ * NOTE:  When powered by USB, the radio will see a lot of noise, and will 
+ * not be able to find a good time signal.
+ */
 void digitalClockDisplay(){
   // digital clock display of the time
   Serial.print(hour());
@@ -166,7 +188,10 @@ void digitalClockDisplay(){
   Serial.println(); 
 }
 
-
+/**
+ * Declares the method to use as a time synchronization function for the 
+ * interrupt line the radio will be attached to.
+ */
 time_t msfTimeSync() {
   return msf.getTime();
 }
